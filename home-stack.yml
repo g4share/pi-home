@@ -1,0 +1,175 @@
+# slack home-stack
+version: "3"
+
+services:
+  
+  traefik:
+    image: "traefik:latest"
+    container_name: traefik
+    command:
+      - --providers.docker
+      - --log.level=ERROR
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entryPoint.permanent=true
+      #- --certificatesresolvers.homeresolver.acme.httpchallenge=true
+      - --certificatesresolvers.homeresolver.acme.tlschallenge=true
+      - --certificatesresolvers.homeresolver.acme.email=${letsencrypt_email}
+      - --certificatesresolvers.homeresolver.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      #- "./acme.json:/acme.json"
+      - letsencrypt:/letsencrypt
+    networks:
+      net_front:
+        ipv4_address: 10.0.0.6
+
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    hostname: 'pi.hole'
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    environment:
+      TZ: '${timezone}'
+      TEMPERATUREUNIT: 'c'
+      WEBPASSWORD: '${pihole_password}'
+      QUERY_LOGGING: 'true'
+    volumes:
+      - 'pihole:/etc/pihole'
+      - 'dnsmasq.d:/etc/dnsmasq.d'    
+    networks:
+      net_front:
+        ipv4_address: 10.0.0.5
+
+  file-browser:
+    image: filebrowser/filebrowser
+    container_name: file-browser
+    restart: unless-stopped
+    user: 1000:1000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.filebrowser.rule=Host(`filebrowser.g4share.com`)"
+      - "traefik.http.routers.filebrowser.entrypoints=websecure"
+      - "traefik.http.routers.filebrowser.tls.certresolver=homeresolver"
+
+    ports:
+      - 8081:80
+    volumes:
+      - 'nas-share:/srv'
+      - '/srv/${ssd_name}/docker/config/database.db:/database.db'
+    security_opt:
+      - no-new-privileges:true
+
+  torrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ='${timezone}'
+      - WEBUI_PORT=8080
+    volumes:
+      - torrent_config:/config
+      - torrent_download:/downloads
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    networks:
+      net_front:
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ='${timezone}'
+    volumes:
+      - jellyfin_config:/config
+      - jellyfin_media:/data
+      - torrent_download:/torrent
+    ports:
+      - 8096:8096
+      - 7359:7359/udp
+      - 1900:1900/udp
+    networks:
+      net_front:
+        ipv4_address: 10.0.0.7
+    devices:
+      - "/dev/video10:/dev/video10"
+      - "/dev/video11:/dev/video11"
+      - "/dev/video12:/dev/video12"
+
+
+volumes:
+
+  letsencrypt:
+    driver: local
+
+  pihole:
+    driver: local
+
+  dnsmasq.d:
+    driver: local
+
+  nas-share:
+    driver_opts:
+      type: cifs
+      device: "//10.0.0.15/shared"
+      o: "username=${nas_user},password=${nas_password}"
+
+  file-browser.db:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: './file-browser/database.db'
+
+  torrent_config:
+    driver: local
+
+  torrent_download:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/srv/${ssd_name}/torrent'
+
+  jellyfin_config:
+    driver: local
+
+  jellyfin_media:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/srv/${ssd_name}/media'
+
+
+networks:
+
+  net_internal:
+
+  net_front:
+    driver: macvlan
+    driver_opts:
+      parent: eth0
+    ipam:
+      config:
+        - subnet: "10.0.0.0/24"
+          gateway: "10.0.0.1"
