@@ -1,0 +1,41 @@
+# slack home-stack-sites
+version: "3"
+
+services:
+
+  truquesdaventura_com:
+    image: httpd:latest
+    container_name: truquesdaventura_com
+    networks:
+      net_backend_shared:
+    volumes:
+      - truquesdaventura.com:/usr/local/apache2/htdocs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.trq.rule=Host(`truquesdaventura.com`)"
+      - "traefik.http.routers.trq.tls.certresolver=le"
+      - "traefik.http.routers.trq.entrypoints=websecure"
+      - "traefik.http.services.trq.loadbalancer.server.port=80"
+
+
+volumes:
+
+  truquesdaventura.com:
+    driver_opts:
+      type: cifs
+      device: "//${nas_ip}/shared/sites/truquesdaventura.com"
+      o: "username=${nas_user},password=${nas_password}"
+
+
+networks:
+
+  net_frontend:
+    name: home_frontend
+    external: true
+
+
+  net_backend_shared:
+    name: home_backend_shared
+    external: true   
+
+    
