@@ -6,6 +6,7 @@ services:
   truquesdaventura_com:
     image: httpd:latest
     container_name: truquesdaventura_com
+    restart: unless-stopped
     networks:
       net_backend_shared:
     volumes:
