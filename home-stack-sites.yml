@@ -1,5 +1,5 @@
 # slack home-stack-sites
-# echo 'AddDefaultCharset utf-8' >> httpd.conf
+# echo 'AddDefaultCharset utf-8' >> conf/httpd.conf
 
 version: "3"
 

@@ -3,75 +3,6 @@ version: "3"
 
 services:
 
-  pihole:
-    image: pihole/pihole:latest
-    container_name: pihole
-    hostname: 'pi.hole'
-    restart: unless-stopped
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "80:80/tcp"
-      - "443:443/tcp"
-    environment:
-      TZ: '${timezone}'
-      TEMPERATUREUNIT: 'c'
-      WEBPASSWORD: '${pihole_password}'
-      QUERY_LOGGING: 'true'
-    volumes:
-      - 'pihole:/etc/pihole'
-      - 'dnsmasq.d:/etc/dnsmasq.d'    
-    networks:
-      net_frontend:
-        ipv4_address: ${dns_ip}
-
-  traefik:
-    image: "traefik:latest"
-    container_name: "traefik"
-    restart: unless-stopped
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:8888"
-      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.le.acme.httpchallenge=true"
-      - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.le.acme.email=${letsencrypt_email}"
-      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
-      #- "--certificatesresolvers.le.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
-      #- "--log.level=DEBUG"
-    ports:
-      - "8888:80"
-      - "443:443"
-      - "8080:8080"
-    volumes:
-      - "letsencrypt:/letsencrypt"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    networks:
-      net_frontend:
-        ipv4_address: ${traefic_ip}
-      net_backend_shared:
-
-  file-browser:
-    image: filebrowser/filebrowser
-    container_name: file-browser
-    restart: unless-stopped  
-    volumes:
-      - 'nas-share:/srv'
-      - '/srv/${ssd_name}/docker/volumes/filebrowser/database.db:/database.db'
-    security_opt:
-      - no-new-privileges:true
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.filebrowser.rule=Host(`share.${domain_name}`)"
-      - "traefik.http.routers.filebrowser.tls.certresolver=le"
-      - "traefik.http.routers.filebrowser.entrypoints=websecure"
-      - "traefik.http.services.filebrowser.loadbalancer.server.port=80"
-    networks:
-      net_backend_shared:
-
   torrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
@@ -86,63 +17,16 @@ services:
       - 6881:6881
       - 6881:6881/udp
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.torrent.rule=Host(`torrent.${domain_name}`)"
-      - "traefik.http.routers.torrent.tls.certresolver=le"
-      - "traefik.http.routers.torrent.entrypoints=websecure"
-      - "traefik.http.services.torrent.loadbalancer.server.port=8080"
+      #- "traefik.enable=true"
+      #- "traefik.http.routers.torrent.rule=Host(`torrent.${domain_name}`)"
+      #- "traefik.http.routers.torrent.tls.certresolver=le"
+      #- "traefik.http.routers.torrent.entrypoints=websecure"
+      #- "traefik.http.services.torrent.loadbalancer.server.port=8080"
     networks:
       net_backend_shared:
-
-  jellyfin:
-    image: lscr.io/linuxserver/jellyfin:latest
-    container_name: jellyfin
-    restart: unless-stopped
-    environment:
-      - TZ='${timezone}'
-    volumes:
-      - jellyfin_config:/config
-      - media:/data
-      - torrent_download:/torrent
-    ports:
-      - 8096:8096 #for local purposes, ie infuse
-      - 7359:7359/udp
-      - 1900:1900/udp
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${domain_name}`)"
-      - "traefik.http.routers.jellyfin.tls.certresolver=le"
-      - "traefik.http.routers.jellyfin.entrypoints=websecure"
-      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
-    networks:
-      net_backend_shared:
-    devices:
-      - "/dev/video10:/dev/video10"
-      - "/dev/video11:/dev/video11"
-      - "/dev/video12:/dev/video12"
 
 
 volumes:
-
-  pihole:
-    driver: local
-
-  dnsmasq.d:
-    driver: local
-
-  letsencrypt:
-
-  nas-share:
-    driver_opts:
-      type: cifs
-      device: "//${nas_ip}/shared"
-      o: "username=${nas_user},password=${nas_password}"
-
-  media:
-    driver_opts:
-      type: cifs
-      device: "//${nas_ip}/shared/media"
-      o: "username=${nas_user},password=${nas_password}"
 
   torrent_config:
     driver: local
@@ -152,23 +36,11 @@ volumes:
     driver_opts:
       type: 'none'
       o: 'bind'
-      device: '/srv/${ssd_name}/torrent'
+      device: '${data}/torrent'
 
-  jellyfin_config:
-    driver: local
 
 
 networks:
-
-  net_frontend:
-    name: home_frontend
-    driver: macvlan
-    driver_opts:
-      parent: eth0
-    ipam:
-      config:
-        - subnet: "${front_lan_mask}"
-          gateway: "${front_lan_gateway}"
 
   net_backend_shared:
       name: home_backend_shared
