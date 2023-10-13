@@ -1,4 +1,4 @@
-# slack home-stack
+# stack home-stack
 version: "3"
 
 services:
@@ -17,11 +17,11 @@ services:
       - 6881:6881
       - 6881:6881/udp
     labels:
-      #- "traefik.enable=true"
-      #- "traefik.http.routers.torrent.rule=Host(`torrent.${domain_name}`)"
-      #- "traefik.http.routers.torrent.tls.certresolver=le"
-      #- "traefik.http.routers.torrent.entrypoints=websecure"
-      #- "traefik.http.services.torrent.loadbalancer.server.port=8080"
+      - "traefik.enable=true"
+      - "traefik.http.routers.torrent.rule=Host(`torrent.${domain_name}`)"
+      - "traefik.http.routers.torrent.tls.certresolver=le"
+      - "traefik.http.routers.torrent.entrypoints=websecure"
+      - "traefik.http.services.torrent.loadbalancer.server.port=8080"
     networks:
       net_backend_shared:
 
