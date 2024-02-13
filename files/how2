@@ -1,0 +1,67 @@
+## Check Devices
+## Everything is mounted to /dev/nvme0n1p3
+
+sudo fdisk -l
+---------------------------------
+Device     Boot     Start        End    Sectors  Size Id Type
+/dev/nvme0n1p1           8192    1056767    1048576  512M  c W95 FAT32 (LBA)
+/dev/nvme0n1p2        1056768  103456767  102400000 48.8G 83 Linux
+/dev/nvme0n1p3      103456768 3907028991 3803572224  1.8T 83 Linux
+
+scp files/0-update.sh files/1-docker.sh files/2-samba.sh files/3-portainer.sh gmunteanu@rpi5.local:~
+
+## Upgrade System, install packages, mount /mnt/nvme0n1p3
+sudo ./0-update.sh 
+sudo reboot
+
+#Install Docker, set docker folder to /mnt/data/docker
+sudo ./1-docker.sh
+sudo reboot
+
+#Install Samba
+sudo ./2-samba.sh
+
+#Install Portainer
+sudo ./3-portainer.sh
+
+open http://rpi5.local:9000/
+Create User: Username
+             Password
+
+#Connect to Docker Hub using credentials
+login to https://hub.docker.com
+create a New Access Token and copy it to clipboard (Menu / Security)
+
+add a new DockerHub Registry to Portainer (Settings / Registries), fill in DockerHub username and access token  
+
+##Alternative qBittorrent UI
+Download the latest VueTorrent build from the releases page https://github.com/VueTorrent/VueTorrent/releases/latest
+
+wget https://github.com/VueTorrent/VueTorrent/releases/download/v2.7.0/vuetorrent.zip
+
+Unzip the vuetorrent.zip file in the /mnt/sda3/torrent/config
+Point your alternate WebUI location to the vuetorrent folder in the qBittorrent settings
+
+qBittorent Tools -> Options
+	Web UI
+	Authentication
+		Usermame 	*****
+		Password	*****
+
+	x Use alternative Web UI
+		Files location: /config/vuetorrent
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sudo apt autoremove
