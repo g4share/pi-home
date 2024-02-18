@@ -16,6 +16,7 @@ services:
       TZ: '${timezone}'
       TEMPERATUREUNIT: 'c'
       WEBPASSWORD: '${pihole_password}'
+      DNSMASQ_LISTENING: 'all'
       QUERY_LOGGING: 'true'
     volumes:
       - 'pihole:/etc/pihole'
