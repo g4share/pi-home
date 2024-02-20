@@ -11,7 +11,7 @@ Device     Boot     Start        End    Sectors  Size Id Type
 scp files/0-update.sh files/1-docker.sh files/2-samba.sh files/3-portainer.sh gmunteanu@rpi5.local:~
 
 ## Upgrade System, install packages, mount /mnt/nvme0n1p3
-sudo ./0-update.sh -d dev/nvme0n1p3
+sudo ./0-update.sh -d /dev/nvme0n1p3
 sudo reboot
 
 #Install Docker, set docker folder to /mnt/data/docker
@@ -32,7 +32,7 @@ Create User: Username
 login to https://hub.docker.com
 create a New Access Token and copy it to clipboard (Menu / Security)
 
-add a new DockerHub Registry to Portainer (Settings / Registries), fill in DockerHub username and access token  
+add a new DockerHub Registry to Portainer (Registries), fill in DockerHub username and access token
 
 ##Alternative qBittorrent UI
 Download the latest VueTorrent build from the releases page https://github.com/VueTorrent/VueTorrent/releases/latest
@@ -52,16 +52,3 @@ qBittorent Tools -> Options
 		Files location: /config/vuetorrent
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-sudo apt autoremove

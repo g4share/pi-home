@@ -1,12 +1,12 @@
-# Pi Hole Stack - rpi5
-version: "3.3"
+# Pi Hole Stack - rpi4 / rpi5
+version: "3.5"
 
 services:
 
-  pihole5:
+  pihole:
     image: pihole/pihole:latest
-    container_name: pihole5
-    hostname: 'pi.hole5'
+    container_name: pihole
+    hostname: '${hostname}'
     restart: unless-stopped
     ports:
       - "53:53/tcp"

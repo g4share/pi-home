@@ -3,6 +3,7 @@
 docker pull portainer/portainer-ce:latest
 docker run -d -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest
 
+#do not create folders on rpi4 - it's just for Pi Hole
 mkdir -p /mnt/data/volumes/torrent/config
 mkdir -p /mnt/data/volumes/torrent/data
 
