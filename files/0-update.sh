@@ -1,5 +1,20 @@
 #! /bin/sh
 
+help() {
+   echo "Usage: $0 -d {diskName}"
+   exit 1
+}
+while getopts "d:" opt; do
+   case "$opt" in
+      d ) diskName="$OPTARG" ;;
+      ? ) help ;;
+   esac
+done
+
+if [ -z "$diskName" ] ; then
+   help
+fi
+
 apt update; apt upgrade -y;
 
 # vim
@@ -18,9 +33,11 @@ if ! [ -x "$(command -v speedtest -V)" ]; then
 fi
 
 if ! grep -q 'data' /etc/fstab ; then
-    echo '#' >> /etc/fstab
-    echo '# data' >> /etc/fstab
-    echo '/dev/nvme0n1p3             /mnt/data       ext4    defaults          0       2' >> /etc/fstab
+    {
+        echo '#'
+        echo '# data'
+        echo "$diskName             /mnt/data       ext4    defaults          0       2"  >> /etc/fstab
+    } >> /etc/fstab
 
     echo '/etc/fstab'
 fi

@@ -11,7 +11,7 @@ Device     Boot     Start        End    Sectors  Size Id Type
 scp files/0-update.sh files/1-docker.sh files/2-samba.sh files/3-portainer.sh gmunteanu@rpi5.local:~
 
 ## Upgrade System, install packages, mount /mnt/nvme0n1p3
-sudo ./0-update.sh 
+sudo ./0-update.sh -d dev/nvme0n1p3
 sudo reboot
 
 #Install Docker, set docker folder to /mnt/data/docker

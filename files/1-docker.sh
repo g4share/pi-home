@@ -20,8 +20,10 @@ systemctl daemon-reload
 systemctl start docker
 
 if ! grep -q 'docker' /etc/fstab ; then
-    echo '# docker' >> /etc/fstab
-    echo '/mnt/data/docker      /var/lib/docker   none    defaults,bind     0    0' >> /etc/fstab
+    {
+        echo '# docker'
+        echo '/mnt/data/docker      /var/lib/docker   none    defaults,bind     0    0'
+    } >> /etc/fstab
 
     echo '/etc/fstab'
 fi
